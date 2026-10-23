@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#08090b">
+  <meta name="color-scheme" content="dark">
+  <title>NEXORA CAMERA X</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="main.js" defer></script>
+</head>
+
+<body>
+  <main id="app" class="app">
+
+    <header class="topbar">
+      <button id="backBtn" class="icon-btn" aria-label="Stop camera"
+              title="Stop camera">
+        <span class="icon">‹</span>
+      </button>
+
+      <div class="brand">
+        <span class="brand-name">NEXORA</span>
+        <span class="brand-sub">CAMERA X</span>
+      </div>
+
+      <button id="toolsBtn" class="icon-btn" aria-label="Camera tools"
+              title="Camera tools">
+        <span class="tool-symbol">☷</span>
+      </button>
+    </header>
+
+    <section id="viewfinder" class="viewfinder">
+      <video id="camera" autoplay playsinline muted></video>
+      <canvas id="previewCanvas" class="preview-canvas"></canvas>
+
+      <div id="gridOverlay" class="grid-overlay hidden" aria-hidden="true">
+        <span></span><span></span>
+        <span></span><span></span>
+      </div>
+
+      <div id="focusMarker" class="focus-marker hidden"></div>
+
+      <div id="cameraLoading" class="camera-loading">
+        <div class="spinner"></div>
+        <p id="loadingText">Preparing camera…</p>
+      </div>
+
+      <div id="cameraError" class="camera-error hidden">
+        <span class="error-icon">!</span>
+        <p id="errorText">Camera unavailable.</p>
+        <button id="retryCameraBtn" class="secondary-btn">Try again</button>
+      </div>
+
+      <div class="view-top">
+        <span id="statusPill" class="status-pill">
+          <span class="status-dot"></span>
+          <span id="statusText">READY</span>
+        </span>
+
+        <button id="flashBtn" class="glass-btn" aria-label="Toggle torch"
+                title="Torch">ϟ</button>
+      </div>
+
+      <div class="view-bottom">
+        <div id="modeDescription" class="mode-description">
+          PHOTO
+        </div>
+
+        <div class="zoom-controls" id="zoomControls">
+          <button class="zoom-preset active" data-zoom="1">1×</button>
+          <button class="zoom-preset" data-zoom="2">2×</button>
+          <button class="zoom-preset" data-zoom="3">3×</button>
+          <button class="zoom-preset" data-zoom="5">5×</button>
+        </div>
+      </div>
+
+      <div id="recordIndicator" class="record-indicator hidden">
+        <span class="record-dot"></span>
+        <span id="recordTime">00:00</span>
+      </div>
+
+      <div id="qrFrame" class="qr-frame hidden" aria-hidden="true">
+        <span class="corner tl"></span>
+        <span class="corner tr"></span>
+        <span class="corner bl"></span>
+        <span class="corner br"></span>
+      </div>
+    </section>
+
+    <section id="cameraControls" class="camera-controls">
+
+      <div id="zoomSliderRow" class="zoom-slider-row">
+        <span class="small-label">ZOOM</span>
+        <input id="zoomSlider" type="range" min="1" max="5"
+               value="1" step="0.1" aria-label="Zoom level">
+        <span id="zoomValue">1.0×</span>
+      </div>
+
+      <div class="mode-row" id="modeRow">
+        <button class="mode-item active" data-mode="photo">PHOTO</button>
+        <button class="mode-item" data-mode="video">VIDEO</button>
+        <button class="mode-item" data-mode="portrait">PORTRAIT</button>
+        <button class="mode-item" data-mode="night">NIGHT</button>
+      </div>
+
+      <div class="shutter-row">
+        <button id="galleryBtn" class="side-control" aria-label="Open last capture"
+                title="Last capture">
+          <span id="galleryGlyph">▧</span>
+        </button>
+
+        <button id="shutterBtn" class="shutter" aria-label="Take photo">
+          <span id="shutterInner"></span>
+        </button>
+
+        <button id="switchCameraBtn" class="side-control"
+                aria-label="Switch camera" title="Switch camera">
+          <span class="switch-symbol">⟳</span>
+        </button>
+      </div>
+
+      <div class="bottom-shortcuts">
+        <button id="filtersBtn" class="shortcut">
+          <span class="shortcut-icon">◈</span>
+          <span>Filters</span>
+        </button>
+        <button id="timerBtn" class="shortcut">
+          <span class="shortcut-icon">◷</span>
+          <span>Timer <b id="timerBadge"></b></span>
+        </button>
+        <button id="gridBtn" class="shortcut">
+          <span class="shortcut-icon">▦</span>
+          <span>Grid</span>
+        </button>
+        <button id="moreModesBtn" class="shortcut">
+          <span class="shortcut-icon">⋯</span>
+          <span>More</span>
+        </button>
+      </div>
+    </section>
+
+    <section id="filterPanel" class="sheet hidden" aria-label="Photo filters">
+      <div class="sheet-handle"></div>
+      <div class="sheet-heading">
+        <div>
+          <h2>Filters</h2>
+          <p>Live preview · Applied to saved photos</p>
+        </div>
+        <button class="close-btn" data-close="filterPanel"
+                aria-label="Close filters">×</button>
+      </div>
+
+      <div id="filterTray" class="filter-tray">
+        <button class="filter-option active" data-filter="natural">
+          <span class="filter-swatch natural"></span>
+          <span>Natural</span>
+        </button>
+        <button class="filter-option" data-filter="warm">
+          <span class="filter-swatch warm"></span>
+          <span>Warm</span>
+        </button>
+        <button class="filter-option" data-filter="cool">
+          <span class="filter-swatch cool"></span>
+          <span>Cool</span>
+        </button>
+        <button class="filter-option" data-filter="vivid">
+          <span class="filter-swatch vivid"></span>
+          <span>Vivid</span>
+        </button>
+        <button class="filter-option" data-filter="soft">
+          <span class="filter-swatch soft"></span>
+          <span>Soft</span>
+        </button>
+        <button class="filter-option" data-filter="portraitTone">
+          <span class="filter-swatch portraitTone"></span>
+          <span>Portrait</span>
+        </button>
+        <button class="filter-option" data-filter="vintage">
+          <span class="filter-swatch vintage"></span>
+          <span>Vintage</span>
+        </button>
+        <button class="filter-option" data-filter="cinema">
+          <span class="filter-swatch cinema"></span>
+          <span>Cinema</span>
+        </button>
+        <button class="filter-option" data-filter="mono">
+          <span class="filter-swatch mono"></span>
+          <span>Mono</span>
+        </button>
+        <button class="filter-option" data-filter="fade">
+          <span class="filter-swatch fade"></span>
+          <span>Fade</span>
+        </button>
+      </div>
+
+      <div class="sheet-actions">
+        <button id="resetFilterBtn" class="secondary-btn">Original</button>
+        <button id="doneFilterBtn" class="primary-btn">Done</button>
+      </div>
+    </section>
+
+    <section id="toolsPanel" class="sheet hidden" aria-label="Camera settings">
+      <div class="sheet-handle"></div>
+      <div class="sheet-heading">
+        <div>
+          <h2>Camera tools</h2>
+          <p>Controls depend on your device</p>
+        </div>
+        <button class="close-btn" data-close="toolsPanel"
+                aria-label="Close tools">×</button>
+      </div>
+
+      <div class="settings-scroll">
+        <div class="setting-row">
+          <div>
+            <strong>Exposure</strong>
+            <small id="exposureInfo">Default exposure</small>
+          </div>
+          <input id="exposureSlider" type="range" min="-2" max="2"
+                 step="0.5" value="0" aria-label="Exposure compensation">
+          <span id="exposureValue">0</span>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Self-timer</strong>
+            <small>Delay before capture</small>
+          </div>
+          <select id="timerSelect" aria-label="Self timer">
+            <option value="0">Off</option>
+            <option value="3">3 seconds</option>
+            <option value="5">5 seconds</option>
+            <option value="10">10 seconds</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Photo aspect ratio</strong>
+            <small>Crop of captured image</small>
+          </div>
+          <select id="aspectSelect" aria-label="Photo aspect ratio">
+            <option value="source">Original</option>
+            <option value="4:3">4:3</option>
+            <option value="16:9">16:9</option>
+            <option value="1:1">1:1</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Image quality</strong>
+            <small>JPEG compression</small>
+          </div>
+          <select id="qualitySelect" aria-label="Image quality">
+            <option value="0.92">High</option>
+            <option value="0.82">Balanced</option>
+            <option value="0.68">Smaller file</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Capture resolution</strong>
+            <small>Requested camera size</small>
+          </div>
+          <select id="resolutionSelect" aria-label="Capture resolution">
+            <option value="default">Device default</option>
+            <option value="1280">HD · 720p</option>
+            <option value="1920">Full HD · 1080p</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Camera device</strong>
+            <small>Available cameras</small>
+          </div>
+          <select id="cameraSelect" aria-label="Choose camera">
+            <option value="">Automatic</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Focus control</strong>
+            <small id="focusInfo">Tap the preview to focus if supported</small>
+          </div>
+          <button id="focusBtn" class="secondary-btn small-btn">Auto</button>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>White balance</strong>
+            <small id="whiteBalanceInfo">Device default</small>
+          </div>
+          <select id="whiteBalanceSelect" aria-label="White balance">
+            <option value="auto">Auto</option>
+            <option value="daylight">Daylight</option>
+            <option value="cloudy">Cloudy</option>
+            <option value="incandescent">Incandescent</option>
+            <option value="fluorescent">Fluorescent</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Grid lines</strong>
+            <small>Composition guide</small>
+          </div>
+          <button id="gridSettingBtn" class="toggle-btn" aria-pressed="false">
+            OFF
+          </button>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Capture feedback</strong>
+            <small>Brief screen flash</small>
+          </div>
+          <button id="feedbackBtn" class="toggle-btn" aria-pressed="true">
+            ON
+          </button>
+        </div>
+
+        <div class="setting-row">
+          <div>
+            <strong>Camera capability report</strong>
+            <small id="capabilitySummary">Not yet detected</small>
+          </div>
+          <button id="refreshCapabilitiesBtn" class="secondary-btn small-btn">
+            Refresh
+          </button>
+        </div>
+
+        <p class="privacy-note">
+          Photos are processed on this device. This app does not upload them.
+          Browser downloads and camera controls depend on your device.
+        </p>
+      </div>
+    </section>
+
+    <section id="modesPanel" class="sheet hidden" aria-label="Shooting modes">
+      <div class="sheet-handle"></div>
+      <div class="sheet-heading">
+        <div>
+          <h2>Shooting modes</h2>
+          <p>Choose a mode to see its available behavior</p>
+        </div>
+        <button class="close-btn" data-close="modesPanel"
+                aria-label="Close modes">×</button>
+      </div>
+
+      <div class="mode-grid">
+        <button class="mode-card active" data-mode="photo">
+          <span>◉</span><strong>Photo</strong><small>Still image</small>
+        </button>
+        <button class="mode-card" data-mode="video">
+          <span>●</span><strong>Video</strong><small>Live recording</small>
+        </button>
+        <button class="mode-card" data-mode="portrait">
+          <span>◌</span><strong>Portrait</strong><small>Software tone</small>
+        </button>
+        <button class="mode-card" data-mode="night">
+          <span>☾</span><strong>Night</strong><small>Low-light enhancement</small>
+        </button>
+        <button class="mode-card" data-mode="timelapse">
+          <span>⌁</span><strong>Time-lapse</strong><small>Sampled frames</small>
+        </button>
+        <button class="mode-card" data-mode="slowmotion">
+          <span>Ⅱ</span><strong>Slow motion</strong><small>Playback effect</small>
+        </button>
+        <button class="mode-card" data-mode="panorama">
+          <span>↔</span><strong>Panorama</strong><small>Unavailable</small>
+        </button>
+        <button id="qrModeBtn" class="mode-card">
+          <span>▦</span><strong>QR Scanner</strong><small>Decode QR codes</small>
+        </button>
+      </div>
+      <p id="modeNotice" class="mode-notice">
+        Choose a shooting mode.
+      </p>
+    </section>
+
+    <section id="qrPanel" class="sheet hidden" aria-label="QR scanner">
+      <div class="sheet-handle"></div>
+      <div class="sheet-heading">
+        <div>
+          <h2>QR Scanner</h2>
+          <p>Keep the code inside the frame</p>
+        </div>
+        <button class="close-btn" data-close="qrPanel"
+                aria-label="Close scanner">×</button>
+      </div>
+
+      <div id="qrState" class="qr-state">Starting scanner…</div>
+      <div id="qrResultBox" class="qr-result hidden">
+        <small>DECODED CONTENT</small>
+        <p id="qrResultText"></p>
+        <p id="qrLinkWarning" class="qr-link-warning hidden">
+          Check this destination before opening it.
+        </p>
+        <div class="sheet-actions">
+          <button id="copyQrBtn" class="secondary-btn">Copy result</button>
+          <button id="openQrBtn" class="primary-btn hidden">Review link</button>
+        </div>
+      </div>
+      <button id="restartQrBtn" class="secondary-btn full-btn">
+        Scan again
+      </button>
+    </section>
+
+    <section id="reviewScreen" class="review-screen hidden">
+      <div class="review-header">
+        <button id="retakeBtn" class="icon-btn" aria-label="Retake">‹</button>
+        <div>
+          <strong id="reviewTitle">Photo review</strong>
+          <small id="reviewMeta">Preview your capture</small>
+        </div>
+        <button id="reviewCloseBtn" class="icon-btn" aria-label="Close review">×</button>
+      </div>
+
+      <div class="review-image-wrap">
+        <img id="reviewImage" alt="Captured photo preview">
+        <video id="reviewVideo" class="hidden" controls playsinline></video>
+      </div>
+
+      <div id="reviewFilterTray" class="review-filter-tray">
+        <button class="review-filter active" data-filter="natural">Original</button>
+        <button class="review-filter" data-filter="warm">Warm</button>
+        <button class="review-filter" data-filter="cool">Cool</button>
+        <button class="review-filter" data-filter="vivid">Vivid</button>
+        <button class="review-filter" data-filter="soft">Soft</button>
+        <button class="review-filter" data-filter="portraitTone">Portrait</button>
+        <button class="review-filter" data-filter="vintage">Vintage</button>
+        <button class="review-filter" data-filter="cinema">Cinema</button>
+        <button class="review-filter" data-filter="mono">Mono</button>
+        <button class="review-filter" data-filter="fade">Fade</button>
+      </div>
+
+      <div class="review-actions">
+        <button id="reviewRetakeBtn" class="secondary-btn">Retake</button>
+        <button id="shareBtn" class="secondary-btn">Share</button>
+        <button id="saveBtn" class="primary-btn">Save photo</button>
+      </div>
+      <p id="reviewMessage" class="review-message" aria-live="polite"></p>
+    </section>
+
+    <div id="countdownOverlay" class="countdown-overlay hidden">
+      <span id="countdownNumber">3</span>
+    </div>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <div id="confirmLinkPanel" class="confirm-link-panel hidden">
+      <div class="confirm-link-card">
+        <h3>Review destination</h3>
+        <p id="confirmLinkText"></p>
+        <p>Only continue if you trust this destination.</p>
+        <div class="sheet-actions">
+          <button id="cancelOpenLinkBtn" class="secondary-btn">Cancel</button>
+          <button id="confirmOpenLinkBtn" class="primary-btn">Open link</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</body>
+</html>
